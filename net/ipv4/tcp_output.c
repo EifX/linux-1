@@ -804,7 +804,7 @@ exit:
 #define TCP_DEFERRED_ALL ((1UL << TCP_TSQ_DEFERRED) |		\
 			  (1UL << TCP_WRITE_TIMER_DEFERRED) |	\
 			  (1UL << TCP_DELACK_TIMER_DEFERRED) |	\
-			  (1UL << TCP_MTU_REDUCED_DEFERRED)) |   \
+			  (1UL << TCP_MTU_REDUCED_DEFERRED) |   \
 			  (1UL << MPTCP_PATH_MANAGER_DEFERRED) |\
 			  (1UL << MPTCP_SUB_DEFERRED))
 /**
@@ -858,8 +858,9 @@ void tcp_release_cb(struct sock *sk)
 			tcp_sk(sk)->mpcb->pm_ops->release_sock(sk);
 		__sock_put(sk);
 	}
-	if (flags & (1UL << MPTCP_SUB_DEFERRED))
+	if (flags & (1UL << MPTCP_SUB_DEFERRED)) {
 		mptcp_tsq_sub_deferred(sk);
+	}
 }
 EXPORT_SYMBOL(tcp_release_cb);
 
@@ -1261,7 +1262,7 @@ int __pskb_trim_head(struct sk_buff *skb, int len)
 		__skb_pull(skb, eat);
 		len -= eat;
 		if (!len)
-			return;
+			return 0;
 	}
 	eat = len;
 	k = 0;
