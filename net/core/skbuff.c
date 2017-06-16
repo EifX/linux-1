@@ -553,7 +553,7 @@ static inline void skb_drop_fraglist(struct sk_buff *skb)
 	skb_drop_list(&skb_shinfo(skb)->frag_list);
 }
 
-static void skb_clone_fraglist(struct sk_buff *skb)
+void skb_clone_fraglist(struct sk_buff *skb)
 {
 	struct sk_buff *list;
 
@@ -756,7 +756,7 @@ EXPORT_SYMBOL(consume_skb);
 	BUILD_BUG_ON(offsetof(struct sk_buff, field) >		\
 		     offsetof(struct sk_buff, headers_end));	\
 
-static void __copy_skb_header(struct sk_buff *new, const struct sk_buff *old)
+void __copy_skb_header(struct sk_buff *new, const struct sk_buff *old)
 {
 	new->tstamp		= old->tstamp;
 	/* We do not copy old->sk */
