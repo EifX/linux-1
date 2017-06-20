@@ -92,6 +92,12 @@ config MPTCP_REDUNDANT
 	  This scheduler sends all packets redundantly over all subflows to decreases
 	  latency and jitter on the cost of lower throughput.
 
+config MPTCP_ENERGY
+	bool "MPTCP Energy"
+	depends on (DEFAULT_SCHEDULER=y)
+	---help---
+	  Activates MPTCP-Energy-Functions in default scheduler
+
 choice
 	prompt "Default MPTCP Scheduler"
 	default DEFAULT

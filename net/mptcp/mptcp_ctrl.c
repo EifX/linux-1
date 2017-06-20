@@ -72,6 +72,12 @@ int sysctl_mptcp_debug __read_mostly;
 EXPORT_SYMBOL(sysctl_mptcp_debug);
 int sysctl_mptcp_syn_retries __read_mostly = 3;
 
+#ifdef MPTCP_ENERGY
+u32 sysctl_mptcp_energy_iface_main __read_mostly = 0;
+u32 sysctl_mptcp_energy_iface_backup __read_mostly = 0;
+int sysctl_mptcp_energy_rtt_mode __read_mostly = 1;
+#endif
+
 bool mptcp_init_failed __read_mostly;
 
 struct static_key mptcp_static_key = STATIC_KEY_INIT_FALSE;
@@ -165,6 +171,29 @@ static struct ctl_table mptcp_table[] = {
 		.maxlen		= MPTCP_SCHED_NAME_MAX,
 		.proc_handler	= proc_mptcp_scheduler,
 	},
+#ifdef MPTCP_ENERGY
+	{
+		.procname = "mptcp_energy_iface_main",
+		.data = &sysctl_mptcp_energy_iface_main,
+		.maxlen = sizeof(u32),
+		.mode = 0644,
+		.proc_handler = &proc_dointvec
+	},
+	{
+		.procname = "mptcp_energy_iface_backup",
+		.data = &sysctl_mptcp_energy_iface_backup,
+		.maxlen = sizeof(u32),
+		.mode = 0644,
+		.proc_handler = &proc_dointvec
+	},
+	{
+		.procname = "mptcp_energy_rtt_mode",
+		.data = &sysctl_mptcp_energy_rtt_mode,
+		.maxlen = sizeof(int),
+		.mode = 0644,
+		.proc_handler = &proc_dointvec
+	},
+#endif
 	{ }
 };
 

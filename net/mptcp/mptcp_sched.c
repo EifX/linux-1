@@ -139,7 +139,7 @@ EXPORT_SYMBOL_GPL(subflow_is_active);
 static struct sock
 *get_subflow_from_selectors(struct mptcp_cb *mpcb, struct sk_buff *skb,
 			    bool (*selector)(const struct tcp_sock *),
-			    bool zero_wnd_test, bool *force)
+			    bool zero_wnd_test, bool *force, bool is_main_iface)
 {
 	struct sock *bestsk = NULL;
 	u32 min_srtt = 0xffffffff;
@@ -183,6 +183,17 @@ static struct sock
 			}
 			found_unused = true;
 		}
+#ifdef MPTCP_ENERGY
+		if (sysctl_mptcp_energy_rtt_mode == 0) {
+		    if ((is_main_iface == true && sysctl_mptcp_energy_iface_main != 0 &&
+					sysctl_mptcp_energy_iface_main == be32_to_cpu(sk->__sk_common.skc_daddr)) ||
+		            (is_main_iface == false && sysctl_mptcp_energy_iface_backup != 0 &&
+					sysctl_mptcp_energy_iface_backup == be32_to_cpu(sk->__sk_common.skc_daddr))) {
+		        bestsk = sk;
+		        break;
+		    }
+		}
+#endif
 
 		if (tp->srtt_us < min_srtt) {
 			min_srtt = tp->srtt_us;
@@ -245,7 +256,7 @@ struct sock *get_available_subflow(struct sock *meta_sk, struct sk_buff *skb,
 
 	/* Find the best subflow */
 	sk = get_subflow_from_selectors(mpcb, skb, &subflow_is_active,
-					zero_wnd_test, &force);
+					zero_wnd_test, &force, true);
 	if (force)
 		/* one unused active sk or one NULL sk when there is at least
 		 * one temporally unavailable unused active sk
@@ -253,7 +264,7 @@ struct sock *get_available_subflow(struct sock *meta_sk, struct sk_buff *skb,
 		return sk;
 
 	sk = get_subflow_from_selectors(mpcb, skb, &subflow_is_backup,
-					zero_wnd_test, &force);
+					zero_wnd_test, &force, false);
 	if (!force && skb)
 		/* one used backup sk or one NULL sk where there is no one
 		 * temporally unavailable unused backup sk
