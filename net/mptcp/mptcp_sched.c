@@ -183,7 +183,7 @@ static struct sock
 			}
 			found_unused = true;
 		}
-#ifdef MPTCP_ENERGY
+#if IS_ENABLED(CONFIG_MPTCP_ENERGY)
 		if (sysctl_mptcp_energy_rtt_mode == 0) {
 		    if ((is_main_iface == true && sysctl_mptcp_energy_iface_main != 0 &&
 					sysctl_mptcp_energy_iface_main == be32_to_cpu(sk->__sk_common.skc_daddr)) ||

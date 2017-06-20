@@ -661,7 +661,7 @@ extern int sysctl_mptcp_checksum;
 extern int sysctl_mptcp_debug;
 extern int sysctl_mptcp_syn_retries;
 
-#ifdef MPTCP_ENERGY
+#if IS_ENABLED(CONFIG_MPTCP_ENERGY)
 extern u32 sysctl_mptcp_energy_iface_main;
 extern u32 sysctl_mptcp_energy_iface_backup;
 extern int sysctl_mptcp_energy_rtt_mode;

@@ -72,7 +72,7 @@ int sysctl_mptcp_debug __read_mostly;
 EXPORT_SYMBOL(sysctl_mptcp_debug);
 int sysctl_mptcp_syn_retries __read_mostly = 3;
 
-#ifdef MPTCP_ENERGY
+#if IS_ENABLED(CONFIG_MPTCP_ENERGY)
 u32 sysctl_mptcp_energy_iface_main __read_mostly = 0;
 u32 sysctl_mptcp_energy_iface_backup __read_mostly = 0;
 int sysctl_mptcp_energy_rtt_mode __read_mostly = 1;
@@ -171,7 +171,7 @@ static struct ctl_table mptcp_table[] = {
 		.maxlen		= MPTCP_SCHED_NAME_MAX,
 		.proc_handler	= proc_mptcp_scheduler,
 	},
-#ifdef MPTCP_ENERGY
+#if IS_ENABLED(CONFIG_MPTCP_ENERGY)
 	{
 		.procname = "mptcp_energy_iface_main",
 		.data = &sysctl_mptcp_energy_iface_main,
