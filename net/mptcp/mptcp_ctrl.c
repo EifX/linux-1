@@ -177,14 +177,14 @@ static struct ctl_table mptcp_table[] = {
 		.data = &sysctl_mptcp_energy_iface_main,
 		.maxlen = sizeof(u32),
 		.mode = 0644,
-		.proc_handler = &proc_dointvec
+		.proc_handler = &proc_douintvec
 	},
 	{
 		.procname = "mptcp_energy_iface_backup",
 		.data = &sysctl_mptcp_energy_iface_backup,
 		.maxlen = sizeof(u32),
 		.mode = 0644,
-		.proc_handler = &proc_dointvec
+		.proc_handler = &proc_douintvec
 	},
 	{
 		.procname = "mptcp_energy_rtt_mode",

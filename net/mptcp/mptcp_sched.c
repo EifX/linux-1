@@ -147,9 +147,22 @@ static struct sock
 	bool found_unused_una = false;
 	struct sock *sk;
 
+#if IS_ENABLED(CONFIG_MPTCP_ENERGY)
+	__be32 iface_main = cpu_to_be32(sysctl_mptcp_energy_iface_main);
+	__be32 iface_backup = cpu_to_be32(sysctl_mptcp_energy_iface_backup);
+	mptcp_debug("%s Find subflow\n", __func__);
+	mptcp_debug("%pI4 IFACE_MAIN\n", &iface_main);
+	mptcp_debug("%pI4 IFACE_BACKUP\n", &iface_backup);
+#endif
+
 	mptcp_for_each_sk(mpcb, sk) {
 		struct tcp_sock *tp = tcp_sk(sk);
 		bool unused = false;
+
+#if IS_ENABLED(CONFIG_MPTCP_ENERGY)
+		__be32 iface_current = ((struct inet_sock *)tp)->inet_saddr;
+		mptcp_debug("%pI4 CURRENT\n", &iface_current);
+#endif
 
 		/* First, we choose only the wanted sks */
 		if (!(*selector)(tp))
@@ -183,13 +196,25 @@ static struct sock
 			}
 			found_unused = true;
 		}
+
 #if IS_ENABLED(CONFIG_MPTCP_ENERGY)
+		mptcp_debug("%s ENERGY Area\n", __func__);
 		if (sysctl_mptcp_energy_rtt_mode == 0) {
-		    if ((is_main_iface == true && sysctl_mptcp_energy_iface_main != 0 &&
-					sysctl_mptcp_energy_iface_main == be32_to_cpu(sk->__sk_common.skc_daddr)) ||
-		            (is_main_iface == false && sysctl_mptcp_energy_iface_backup != 0 &&
-					sysctl_mptcp_energy_iface_backup == be32_to_cpu(sk->__sk_common.skc_daddr))) {
+			mptcp_debug("%s RTT = 0\n", __func__);
+			if ((is_main_iface == true && sysctl_mptcp_energy_iface_main == 0) ||
+				(is_main_iface == false && sysctl_mptcp_energy_iface_backup == 0)){
+				mptcp_debug("%s iface turned off, main = %d\n", __func__, is_main_iface);
+				return NULL;
+			}
+		    if ((is_main_iface == true && iface_main == iface_current) ||
+		            (is_main_iface == false && iface_backup == iface_current)) {
+			mptcp_debug("%s The Best was choosen, main = %d\n", __func__, is_main_iface);
 		        bestsk = sk;
+			
+			if (sysctl_mptcp_energy_iface_backup != 0)
+				tp->mptcp->send_mp_prio = 0;
+			else
+				tp->mptcp->send_mp_prio = 1;
 		        break;
 		    }
 		}
@@ -241,6 +266,7 @@ struct sock *get_available_subflow(struct sock *meta_sk, struct sk_buff *skb,
 		sk = (struct sock *)mpcb->connection_list;
 		if (!mptcp_is_available(sk, skb, zero_wnd_test))
 			sk = NULL;
+		mptcp_debug("%s EXIT only one subflow \n", __func__);
 		return sk;
 	}
 
@@ -249,19 +275,23 @@ struct sock *get_available_subflow(struct sock *meta_sk, struct sk_buff *skb,
 	    skb && mptcp_is_data_fin(skb)) {
 		mptcp_for_each_sk(mpcb, sk) {
 			if (tcp_sk(sk)->mptcp->path_index == mpcb->dfin_path_index &&
-			    mptcp_is_available(sk, skb, zero_wnd_test))
+			    mptcp_is_available(sk, skb, zero_wnd_test)){
+		mptcp_debug("%s EXIT Answer data_fin on same subflow \n", __func__);
 				return sk;
+			}
 		}
 	}
 
 	/* Find the best subflow */
 	sk = get_subflow_from_selectors(mpcb, skb, &subflow_is_active,
 					zero_wnd_test, &force, true);
-	if (force)
+	if (force){
 		/* one unused active sk or one NULL sk when there is at least
 		 * one temporally unavailable unused active sk
 		 */
+		mptcp_debug("%s EXIT forced main subflow \n", __func__);
 		return sk;
+	}
 
 	sk = get_subflow_from_selectors(mpcb, skb, &subflow_is_backup,
 					zero_wnd_test, &force, false);
@@ -273,6 +303,7 @@ struct sock *get_available_subflow(struct sock *meta_sk, struct sk_buff *skb,
 		 * sks, so clean the path mask
 		 */
 		TCP_SKB_CB(skb)->path_mask = 0;
+	mptcp_debug("%s EXIT normal \n", __func__);
 	return sk;
 }
 EXPORT_SYMBOL_GPL(get_available_subflow);
