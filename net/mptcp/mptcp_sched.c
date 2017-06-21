@@ -208,15 +208,15 @@ static struct sock
 			}
 		    if ((is_main_iface == true && iface_main == iface_current) ||
 		            (is_main_iface == false && iface_backup == iface_current)) {
-			mptcp_debug("%s The Best was choosen, main = %d\n", __func__, is_main_iface);
+				mptcp_debug("%s The Best was choosen, main = %d\n", __func__, is_main_iface);
 		        bestsk = sk;
+		    }
 			
 			if (sysctl_mptcp_energy_iface_backup != 0)
 				tp->mptcp->send_mp_prio = 0;
 			else
 				tp->mptcp->send_mp_prio = 1;
-		        break;
-		    }
+	        break;
 		}
 #endif
 
